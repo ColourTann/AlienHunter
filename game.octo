@@ -1,0 +1,14 @@
+# stuff to know
+
+# 0x00 0xE0 is clear
+# 0x00 0xee is return 
+# 
+
+: main
+
+return
+
+
+v0 += v0
+v1 += 0
+v2 += 0
