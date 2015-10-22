@@ -1,0 +1,35 @@
+# bytecodes:
+
+# 00 e0 	clear
+# 00 ee 	return 
+# 10 nn 	jump nn
+# 2n nn 	call nn
+# 3x nn 	skip next instruction if x == nn
+# 4x nn 	!3x
+# 5x y0 	skip next instruction if x==y
+# 6x nn 	set x to nn
+# 7x nn 	add nn to x
+
+# 8x y0  	x = y
+# 8x y1  	x = x|y
+# 8x y2 	x = x&y
+# 8x y3  	x = x|xor|y
+# 8x y4  	x = x+y
+# 8x y5 	x = x-y
+# 8x y6		x = y<<1
+# 8x y7		x = y-6
+# 8x ye		x = y>>1
+
+# 9x y0		skips next if x != y
+# an nn 	i := n
+# bn nn		jump v0
+# cx nn		x= random&nn
+# dx yn		sprite x y n
+# ex 9e		skip next instruction if key x is down
+# ex a1		!^
+# fx 07		x = delay
+# fx 0a		block for key, store in x
+# fx 15		delay = x
+# fx 18		buzzer = x
+# fx 1e		i += x
+# bunch of stuff I don't want is higher than these

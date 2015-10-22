@@ -1,0 +1,50 @@
+
+:alias shipX vc
+:alias shipY vd
+
+: controls
+7 9 5
+
+: main
+	shipY := 61
+	i := main
+	sprite shipX shipY 3
+	loop
+		v0 := 1
+		delay := v0
+		game1oop
+		 
+		v0 := delay
+		loop while v0 > 0
+			v0 := delay
+		again
+
+		
+	again
+;
+
+: gameloop
+
+	i := controls
+	load v3
+
+	i := main
+	sprite shipX shipY 3
+
+	if v0 key then shipX += -1
+	if v1 key then shipX += +1
+	if v2 key then shoot
+	
+	
+
+	sprite shipX shipY 3
+
+;
+
+: shoot
+
+;
+
+: game1oop
+	gameloop
+;
