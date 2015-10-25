@@ -1,0 +1,35 @@
+if a bullet hits
+go through all aliens and draw twice
+if collide on second try, destory alien + bullet
+
+OR
+just make aliens more carefully
+
+complain about memory blossoming out of control
+increasing slightly each time I run
+
+in any case, need to test out glitch effects
+
+
+
+basic glitches->
+PLAY SOUND GREEAAAUUHHGH
+glitch enemy texture
+glitch bullet texture
+glitch player texture
+draw random things in next colour over screen!
+
+colours bleeding through
+
+glitch enemy speed
+
+what other things can the enemy do to glitch your stuff...
+
+tiny slow bullets
+move player lr every frame
+change controls
+up moves the player up 
+write a working restart function, aliens destroy it'#
+cant move lr or shoot
+
+test rng...

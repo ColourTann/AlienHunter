@@ -1,16 +1,53 @@
-
+:const maxShots 5
+:const maxAliens 10
+:const shotCooldown 7
+:alias shotTimer va
+:alias counter vb
+:alias counter2 v9
 :alias shipX vc
 :alias shipY vd
+:alias enemySpeed v8
+: imageShip
+0b00111000
+0b00111000
+0b01111100
+0b11111110
+
+: imageAlien
+0b01110000
+0b11011000
+0b10101000
+0b11111000
+0b01010000
+
+: imageShot
+0b11100000
+0b11100000
+0b11100000
 
 : controls
 7 9 5
 
+: aliens
+
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  
+
+: shots
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 
+
 : main
-	shipY := 61
-	i := main
-	sprite shipX shipY 3
+	enemySpeed := 1
+	hires
+	shipY := 60
+	i := imageShip
+	sprite shipX shipY 4
+
+	setupa1iens
+	
 	loop
-		v0 := 1
+		v0 := 3
 		delay := v0
 		game1oop
 		 
@@ -18,33 +55,235 @@
 		loop while v0 > 0
 			v0 := delay
 		again
-
-		
 	again
 ;
 
 : gameloop
+	clear
 
+	
+	
+	
+	updatePlayer
+	updateShots
+	updateAliens	
+
+	v0 := random 0b000111
+	if v0 == 0 then makeAlien
+;
+
+: updatePlayer
+	if shotTimer != 0 then shotTimer += -1
 	i := controls
 	load v3
-
-	i := main
-	sprite shipX shipY 3
-
-	if v0 key then shipX += -1
-	if v1 key then shipX += +1
+	if v1 key then shipX += +2
 	if v2 key then shoot
-	
-	
+	if v0 key then shipX += -2
 
-	sprite shipX shipY 3
+	i := imageShip
+	sprite shipX shipY 4
 
 ;
+
+
+: setupa1iens
+	counter2 := 60
+	setupAliens
+;
+
+: setupAliens
+	makeAlien
+	makeAlien
+	#makeAlien
+;
+
+: makeAlien
+	counter := 0
+	loop while counter < maxAliens
+		i := aliens
+		i += counter
+		i += counter
+		load v1
+		if v1 == 0 begin
+			v0 := random 0b11111111
+			v1 := random 0b00000011
+			v1 += 1
+			i := aliens
+			i += counter
+			i += counter
+			save v1		
+			;
+		end
+		counter += 1
+	again
+;
+
 
 : shoot
+	if shotTimer != 0 then ;
+	shotTimer := shotCooldown
+	counter := 0
+	loop while counter < maxShots
+		i := shots
+		i += counter
+		i += counter
+		load v1
+		if v1 == 0 begin
+			i := shots
+			i += counter
+			i += counter
+			v0 := shipX
+			v0 += 2
+			v1 := shipY
+			v1 += -2
+			save v1
+			;
+		end
+		counter += 1
+	again	
+;
+
+: updateShots
+	counter := 0
+	v3 := -2
+	loop while counter < maxShots
+		i := shots
+		i += counter
+		i += counter	
+		load v1
+		if v1 != 0 begin
+			v1 += -2
+			i := shots
+			i += counter
+			i += counter	
+			save v1
+			i := imageShot
+			sprite v0 v1 3
+		end
+		counter += 1
+	again
+	
 
 ;
+
+: updateAliens
+	counter := 0
+	loop while counter < maxAliens
+		i := aliens
+		i += counter
+		i += counter	
+		load v1
+		if v1 != 0 begin
+			
+			v2 := random 0b000000010
+			v2 += -1
+			v0 += v2
+			v3 := random 0b1
+			if v3 == 0 then v1 += enemySpeed
+			if v1 >= 58 then v1 := 0
+
+
+			if v1 != 0 begin
+				i := imageAlien
+				sprite v0 v1 5
+				if vf == 1 begin
+					v1 := 0
+				end 
+			end
+
+			i := aliens
+			i += counter
+			i += counter	
+			save v1
+
+		end
+		counter += 1
+	again
+;
+
+: testGlitchTable
+	jump gTest
+	jump gTest
+	jump gTest
+	jump gTest
+	jump gTest
+	jump gTest
+	jump gTest
+	jump gTest
+
+: glitchTable
+		jump g0 
+		jump g1
+		jump g0 
+		jump g1
+		jump g0 
+		jump g1
+		jump g0 
+		jump g1 
+		
 
 : game1oop
 	gameloop
+	counter2 += -1
+	if counter2 > 0 then ;
+	counter2 := 50
+	v0 := random 0b00000111
+	counter2 += v0
+	counter2 += v0
+	v0 <<= v0
+	jump0 testGlitchTable
+	
+	
+; 
+
+: gTest
+	g3
+	
+;
+
+
+
+: g- ;
+
+
+: g0
+	# glitch screen texture
+	v0 := random 0b11111111
+	v1 := random 0b11111111
+	plane 2
+	i := main
+	i += v0
+	sprite v0 v1 0
+	plane 1
+
+;
+
+: g1
+	# glitch enemy texture
+	i := imageAlien
+	v0 := random 0b10
+	i += v0
+	v0 := random 0b11111111
+	v1 := random 0b11111111
+	v2 := random 0b11111111
+	save v2
+;
+
+: g2
+	# speed up enemies, need to glitch
+	enemySpeed += 2
+
+;
+
+: g3
+	#smaller bullets
+	i := imageShot
+	v0 := 0
+	v1 := 0
+	v2 := 0b01000000
+	save v2
+;
+
+: g4
+
 ;
