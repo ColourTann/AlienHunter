@@ -33,3 +33,19 @@ write a working restart function, aliens destroy it'#
 cant move lr or shoot
 
 test rng...
+
+score
+
+
+alt + 255 to hide 
+
+
+left to do:
+
+score
+palette
+quieter sound
+clean up all the code
+squirrel away the glitches
+bytify the glitches
+make a crash-glitch that happens for sure later on

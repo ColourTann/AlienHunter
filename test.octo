@@ -4,6 +4,7 @@
 :alias shotTimer va
 :alias counter vb
 :alias counter2 v9
+:alias spawnTimer v7
 :alias shipX vc
 :alias shipY vd
 :alias enemySpeed v8
@@ -24,6 +25,7 @@
 0b11100000
 0b11100000
 0b11100000
+0b00000000
 
 : controls
 7 9 5
@@ -36,6 +38,20 @@
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 0 0 
+
+
+: score
+0
+
+: decodedScore
+0 0 0
+
+: 0
+
+
+# this is a comment it won't run!
+
+# use these to make notes and stuff
 
 : main
 	enemySpeed := 1
@@ -62,14 +78,15 @@
 	clear
 
 	
+	if spawnTimer == 0 then makeAlien
+	spawnTimer += -1
 	
 	
 	updatePlayer
 	updateShots
 	updateAliens	
-
-	v0 := random 0b000111
-	if v0 == 0 then makeAlien
+	updateScore
+	
 ;
 
 : updatePlayer
@@ -86,18 +103,16 @@
 ;
 
 
-: setupa1iens
-	counter2 := 60
-	setupAliens
-;
+
 
 : setupAliens
 	makeAlien
-	makeAlien
-	#makeAlien
 ;
 
 : makeAlien
+
+	spawnTimer := 20
+
 	counter := 0
 	loop while counter < maxAliens
 		i := aliens
@@ -116,6 +131,7 @@
 		end
 		counter += 1
 	again
+
 ;
 
 
@@ -178,9 +194,8 @@
 			v2 := random 0b000000010
 			v2 += -1
 			v0 += v2
-			v3 := random 0b1
-			if v3 == 0 then v1 += enemySpeed
-			if v1 >= 58 then v1 := 0
+			v1 += enemySpeed
+			if v1 >= 60 then v1 := 0
 
 
 			if v1 != 0 begin
@@ -201,6 +216,39 @@
 	again
 ;
 
+: updateScore
+	i := score
+	load v0
+	i := decodedScore
+	bcd v0
+	i := decodedScore
+	load v2
+
+
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+: setupa1iens
+	counter2 := 60
+	setupAliens
+;
+
 : testGlitchTable
 	jump gTest
 	jump gTest
@@ -214,9 +262,9 @@
 : glitchTable
 		jump g0 
 		jump g1
-		jump g0 
-		jump g1
-		jump g0 
+		jump g2 
+		jump g3
+		jump g4
 		jump g1
 		jump g0 
 		jump g1 
@@ -226,18 +274,56 @@
 	gameloop
 	counter2 += -1
 	if counter2 > 0 then ;
-	counter2 := 50
+
+	i := main
+	v0 := random 0b11111111
+	v0 <<= v0
+	v0 <<= v0
+	v0 <<= v0
+	i += v0
+	audio
+	v0 := 50
+	buzzer := v0
+
+	counter2 := 30
+
+	i := imageShip
+	v0 := random 0b11111111
+	v0 <<= v0
+	v0 <<= v0
+	i += v0
+	v0 := random 0b11111110
+	i += v0
+	v0 := 0xf2 
+	v1 := 0x1e
+	save v1
+
 	v0 := random 0b00000111
 	counter2 += v0
 	counter2 += v0
 	v0 <<= v0
-	jump0 testGlitchTable
+
+	# general glitch
+	
+
+	jump0 glitchTable
 	
 	
 ; 
 
 : gTest
-	g3
+	i := imageShip
+	v0 := random 0b11111111
+	v0 <<= v0
+	v0 <<= v0
+	i += v0
+	v0 := random 0b11111110
+	i += v0
+	v0 := 0xf2 
+	v1 := 0x1e
+	save v1
+
+	
 	
 ;
 
@@ -261,12 +347,10 @@
 : g1
 	# glitch enemy texture
 	i := imageAlien
-	v0 := random 0b10
+	v0 := random 0b11
 	i += v0
 	v0 := random 0b11111111
-	v1 := random 0b11111111
-	v2 := random 0b11111111
-	save v2
+	save v0
 ;
 
 : g2
@@ -285,5 +369,11 @@
 ;
 
 : g4
-
+	#glitchShip
+	i := imageShip
+	v0 := random 0b11111111
+	v1 := random 0b11111111
+	v2 := random 0b10
+	i += v2
+	save v1
 ;
