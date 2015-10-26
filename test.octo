@@ -1,16 +1,21 @@
+### ALIEN FIGHTER ###
+###   W TO SHOOT  ###
+###  A/D TO MOVE  ###
+
 :const maxShots 5
 :const maxAliens 10
 :const shotCooldown 7
-:alias shotTimer va
-:alias counter vb
-:alias counter2 v9
-:alias spawnTimer v7
-:alias shipX vc
+
+## TODO: investigate weird textures appearing on the screen. 
+## I don't think chip8 can display more than 2 colours so it might be a hardware issue?
+
 :alias shipY vd
+:alias shipX vc
+:alias counter vb
+:alias shotTimer va
+:alias spawnTimer v9
 
-
-# Data
-
+## Data
 : controls
 7 9 5
 
@@ -30,27 +35,34 @@
 : decodedScore
 0 0 0
 
-
-
 : main
 	hires
 	shipX := 60
 	shipY := 60
-	makeAlien
+	makeAlien ## Start with an alien
 	loop
-
-		gameloop  ## Main game loop
+		## Main game loop, calls gameloop and then a delay loop
+		## to keep the game running smoothly
+		gameloop 
 		v0 := 3  
 		delay := v0
 		v0 := delay
 		loop while v0 > 0
-			v0 := delay  ## Delay loop to keep the game running smoothly
+			v0 := delay
 		again
 	again
 ;
 
+## Been having some more hardware issues:
+## Often when the screen glitches with that weird colour, there's a crazy noise.
+## Chip8 only has a simple buzzer so it must be another hardware thing. 
+## I'll have to test this out on some other computer or something.
+
 : gameloop
-	clear  ## Clear the screen each time. Might be faster to un-draw and re-draw things in new positions, should come back to this.
+	## Clear the screen each time. 
+	## Might be faster to un-draw and re-draw things in new positions 
+	## should come back to this.
+	clear  
 	## Spawn enemies on a timer
 	if spawnTimer == 0 then makeAlien  
 	spawnTimer += -1	
@@ -62,17 +74,27 @@
 	
 ;
 
+## It's been crashing more and more recently
+## Strange, it's a really simple game and chip8 stuff doesn't usually crash.
+
 : updatePlayer
-	if shotTimer != 0 then shotTimer += -1 ## shotTimer tracks cooldown for shooting
-	## Load up the control numbers and compare if they're being pushed to do the correct input stuff
+	## shotTimer tracks cooldown for shooting
+	if shotTimer != 0 then shotTimer += -1 
+	## Load up the control numbers 
 	i := controls
 	load v3
+	## Check if they're being pushed to do the correct input stuff
 	if v1 key then shipX += +2
 	if v2 key then shoot
 	if v0 key then shipX += -2
 	i := imageShip
 	sprite shipX shipY 4
 ;
+
+## I'm getting some really weird behaviour going on.
+## Sometimes everything starts going a bit crazy
+## It's different each time abd really annoying to debug.
+## I bet it's something really simple haha.
 
 : makeAlien
 	## 20 "frames" between each enemy spawn
@@ -84,13 +106,14 @@
 		i += counter
 		load v1
 		if v1 == 0 begin
-			## Found an empty pair of bytes in the list to initialise with alien x/y
+			## Found an empty pair of bytes in the list
 			v0 := random 0b11111111
 			v1 := random 0b00000011
 			v1 += 1
 			i := aliens
 			i += counter
 			i += counter
+			## Initialise with alien x/y
 			save v1		
 			;
 		end
@@ -98,6 +121,9 @@
 	again
 ;
 
+## My textures have started getting corrupt in the middle of games
+## I must be more careful with saving/loading with future games
+## Can't see how it's happening here though...
 
 : shoot
 	if shotTimer != 0 then ;
@@ -125,6 +151,10 @@
 	again	
 ;
 
+## TODO
+## Sometimes bullets stop moving
+## Sometimes I can't shoot?
+
 : updateShots
 	## Update the position of all active shots and draw them
 	counter := 0
@@ -148,6 +178,11 @@
 
 ;
 
+## Sometimes the enemies start moving really fast
+## I don't see how this could happen 
+## I checked that updateAliens was only running once per loop
+## And I'm incrementing their y position by an integer
+
 : updateAliens
 ## Update the position of all active aliens and draw them
 	counter := 0
@@ -157,6 +192,8 @@
 		i += counter	
 		load v1
 		if v1 != 0 begin
+			## v0 and v1 are alien x/y positions loaded from the list. 
+			## Same system as shots.
 			v1 += 1
 			v2 := random 0b000000010
 			v2 += -1
@@ -165,7 +202,8 @@
 			if v1 != 0 begin
 				i := imageAlien
 				sprite v0 v1 5
-				## If they are drawn ontop of something (probably a bullet), kill them and increment score
+				## If they are drawn ontop of something (probably a bullet)
+				## Kill them and increment score
 				if vf == 1 begin
 					v1 := 0
 					i := score
@@ -183,6 +221,9 @@
 		counter += 1
 	again
 ;
+
+## The whole game seems fucked. I don't want to start over
+## But I might have to
 
 : updateScore
 	v0 := 0
@@ -225,7 +266,15 @@
 	again
 ;
 
-# images
+## One time my score started going crazy. 
+## Went all the way to 255 and looped back round over and over 
+## It was cool!
+
+## Images
+
+## I think my images are getting corrupted too
+## Sometimes they look cool when they're corrupted though
+
 
 : imageShip
 0b00111000
@@ -313,104 +362,5 @@
 0xff
 0xff
 
-
-
-: glitchTable
-		jump g0 
-		jump g1
-		jump g2 
-		jump g0 
-		jump g1
-		jump g2 
-		jump g0 
-		jump g1
-		jump g3		
-
-: gameloop 
-	gameloop
-	counter2 += 1
-	if counter2 < 100 then ;
-
-	i := main
-	v0 := random 0b11111111
-	v0 <<= v0
-	v0 <<= v0
-	v0 <<= v0
-	i += v0
-	audio
-	v0 := 50
-	buzzer := v0
-
-	counter2 := 30
-
-	v0 := random 0b111111
-	counter2 += v0
-
-	i := controls
-	v0 := random 0b11111111
-	v0 <<= v0
-	v0 <<= v0
-	i += v0
-	v0 := random 0b11111110
-	v0 += 1
-	i += v0
-	v0 := 0xf2 
-	v1 := 0x1e
-	save v1
-
-	i := imageShip
-	v0 := random 0b00111111
-	i += v0
-	v0 := random 0b11111111
-	save v0
-
-	v0 := random 0b0000111
-	
-	v0 <<= v0
-	# general glitch
-	jump0 glitchTable
-; 
-
-: g0
-	# glitch screen texture
-	v0 := random 0b11111111
-	v1 := random 0b11111111
-	plane 2
-	i := main
-	i += v0
-	sprite v0 v1 0
-	plane 1
-
-;
-
-: g1
-	# glitch enemy texture
-	i := imageAlien
-	v0 := random 0b11
-	i += v0
-	v0 := random 0b11111111
-	save v0
-;
-
-: g2
-	#glitchShip
-	i := imageShip
-	v0 := random 0b11111111
-	v2 := random 0b11
-	i += v2
-	save v0
-;
-
-: g3
-	# speed up enemies, need to glitch
-	#enemySpeed += 2
-
-	i := updateAliens
-	v0 := 22
-	i += v0
-
-	v0 := 0x71
-	v1 := 0x03
-	save v1
-
-;
+: imageDefault
+0x14 0x28 0x14 0x38 0x14 0x44 #STREJCK zgtop# 0x14 0x28 0x14 0x38 0x14 0x44 0x14 0x28 0x14 0x38 0x14 0x50 0xC0 0xFF 0xC1 0xFF 0xF2 0x01 0xA2 0x59 0xF0 0x1E 0xD0 0x10 0xF1 0x01 0x00 0xEE 0xA3 #STREJCK# 0xD7 0xC0 0x03 0xF0 0x1E 0xC0 0xFF 0xF0 0x55 0x00 0xEE 0xA3 #STREJCK# 0xD3 0xC0 0xFF 0xC2 0x03 0xF2 0x1E 0xF0 0x55 0x00 0xEE 0xA3 0x33 0x60 0x16 0xF0 0x1E 0x60 0x71 0x61 0x03 0xF1 0x55 0x00 0xEE 0x00 0x01 #STREJCK intrc%pt# : gameloop  0x22 0x79 0x78 0x01 0x6E 0x64 0x8E 0x87 0x3F 0x01 0x00 0xEE 0xA2 0x59 0xC0 0xFF 0x80 0x0E 0x80 0x0E 0x80 0x0E 0xF0 0x1E 0xF0 0x02 0x60 0x32 0xF0 0x18 0x68 0x1E 0xC0 0x3F 0x88 0x04 0xA2 0x02 0xC0 0xFF 0x80 0x0E 0x80 #STREJCK# 0x0E 0xF0 0x1E 0xC0 0xFE 0x70 0x01 0xF0 0x1E 0x60 0xF2 0x61 0x1E 0xF1 0x55 0xA3 0xD3 0xC0 0x3F 0xF0 0x1E 0xC0 0xFF 0xF0 #STREJCKkll*r# 0x55 0xC0 0x07 0x80 0x0E 0xB4 0x16 0x00 0xEE
