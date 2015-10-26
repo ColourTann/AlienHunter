@@ -7,7 +7,223 @@
 :alias spawnTimer v7
 :alias shipX vc
 :alias shipY vd
-:alias enemySpeed v8
+
+
+# Data
+
+: controls
+7 9 5
+
+## Aliens and shots are stored in sets of two bytes for x and y positions
+
+: aliens
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+: shots
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+: score
+0
+
+: decodedScore
+0 0 0
+
+
+
+: main
+	hires
+	shipX := 60
+	shipY := 60
+	makeAlien
+	loop
+
+		gameloop  ## Main game loop
+		v0 := 3  
+		delay := v0
+		v0 := delay
+		loop while v0 > 0
+			v0 := delay  ## Delay loop to keep the game running smoothly
+		again
+	again
+;
+
+: gameloop
+	clear  ## Clear the screen each time. Might be faster to un-draw and re-draw things in new positions, should come back to this.
+	## Spawn enemies on a timer
+	if spawnTimer == 0 then makeAlien  
+	spawnTimer += -1	
+	## Update everything in the correct order
+	updateShots
+	updateAliens	
+	updatePlayer
+	updateScore
+	
+;
+
+: updatePlayer
+	if shotTimer != 0 then shotTimer += -1 ## shotTimer tracks cooldown for shooting
+	## Load up the control numbers and compare if they're being pushed to do the correct input stuff
+	i := controls
+	load v3
+	if v1 key then shipX += +2
+	if v2 key then shoot
+	if v0 key then shipX += -2
+	i := imageShip
+	sprite shipX shipY 4
+;
+
+: makeAlien
+	## 20 "frames" between each enemy spawn
+	spawnTimer := 20
+	counter := 0
+	loop while counter < maxAliens
+		i := aliens
+		i += counter
+		i += counter
+		load v1
+		if v1 == 0 begin
+			## Found an empty pair of bytes in the list to initialise with alien x/y
+			v0 := random 0b11111111
+			v1 := random 0b00000011
+			v1 += 1
+			i := aliens
+			i += counter
+			i += counter
+			save v1		
+			;
+		end
+		counter += 1
+	again
+;
+
+
+: shoot
+	if shotTimer != 0 then ;
+	shotTimer := shotCooldown
+	counter := 0
+	loop while counter < maxShots
+		i := shots
+		i += counter
+		i += counter
+		load v1
+		if v1 == 0 begin
+			## Found an empty pair of bytes in the list to initialise with shot x/y
+			i := shots
+			i += counter
+			i += counter
+			## Initialise it above the cannon of the player ship
+			v0 := shipX
+			v0 += 2
+			v1 := shipY
+			v1 += -2
+			save v1
+			;
+		end
+		counter += 1
+	again	
+;
+
+: updateShots
+	## Update the position of all active shots and draw them
+	counter := 0
+	v3 := -2
+	loop while counter < maxShots
+		i := shots
+		i += counter
+		i += counter	
+		load v1
+		if v1 != 0 begin
+			v1 += -2
+			i := shots
+			i += counter
+			i += counter	
+			save v1
+			i := imageShot
+			sprite v0 v1 3
+		end
+		counter += 1
+	again
+
+;
+
+: updateAliens
+## Update the position of all active aliens and draw them
+	counter := 0
+	loop while counter < maxAliens
+		i := aliens
+		i += counter
+		i += counter	
+		load v1
+		if v1 != 0 begin
+			v1 += 1
+			v2 := random 0b000000010
+			v2 += -1
+			v0 += v2
+			if v1 >= 60 then v1 := 0
+			if v1 != 0 begin
+				i := imageAlien
+				sprite v0 v1 5
+				## If they are drawn ontop of something (probably a bullet), kill them and increment score
+				if vf == 1 begin
+					v1 := 0
+					i := score
+					load v0
+					v0 += 1
+					i := score
+					save v0
+				end 
+			end
+			i := aliens
+			i += counter
+			i += counter	
+			save v1
+		end
+		counter += 1
+	again
+;
+
+: updateScore
+	v0 := 0
+	v1 := 0
+	## Fill the top bar
+	i := imageFull
+	loop while v0 < 128
+		sprite v0 v1 4
+		v0 += 8
+	again
+	## Draw the word "kills"
+	i := imageKills
+	v5 := 50
+	v6 := 0
+	sprite v5 v6 4
+	v2 := 4
+	i += v2
+	v5 += 8
+	sprite v5 v6 4
+	v5 += 5
+	i := score
+	load v0
+	i := decodedScore
+	bcd v0
+	counter := 0
+	## Draw the score as a BCD
+	loop while counter < 3
+		i := decodedScore
+		i += counter
+		load v0
+		i := image0
+		i += v0
+		i += v0
+		i += v0
+		i += v0
+		sprite v5 v6 4
+		v5 += 4
+		v2 := 1
+		counter += 1
+	again
+;
 
 # images
 
@@ -98,297 +314,22 @@
 0xff
 
 
-# data
-
-: controls
-7 9 5
-
-: aliens
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  
-
-: shots
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
-0 0 
-
-
-: score
-0
-
-: decodedScore
-0 0 0
-
-: 0
-
-
-# this is a comment it won't run!
-
-# use these to make notes and stuff
-
-: main
-	enemySpeed := 1
-	hires
-	shipY := 60
-	i := imageShip
-	sprite shipX shipY 4
-
-	setupa1iens
-	
-	loop
-		v0 := 3
-		delay := v0
-		game1oop
-		 
-		v0 := delay
-		loop while v0 > 0
-			v0 := delay
-		again
-	again
-;
-
-: gameloop
-	clear
-
-	
-	if spawnTimer == 0 then makeAlien
-	spawnTimer += -1
-	
-	
-	updatePlayer
-	updateShots
-	updateAliens	
-	updateScore
-	
-;
-
-: updatePlayer
-	if shotTimer != 0 then shotTimer += -1
-	i := controls
-	load v3
-	if v1 key then shipX += +2
-	if v2 key then shoot
-	if v0 key then shipX += -2
-
-	i := imageShip
-	sprite shipX shipY 4
-
-;
-
-
-
-
-: setupAliens
-	makeAlien
-;
-
-: makeAlien
-
-	spawnTimer := 20
-
-	counter := 0
-	loop while counter < maxAliens
-		i := aliens
-		i += counter
-		i += counter
-		load v1
-		if v1 == 0 begin
-			v0 := random 0b11111111
-			v1 := random 0b00000011
-			v1 += 1
-			i := aliens
-			i += counter
-			i += counter
-			save v1		
-			;
-		end
-		counter += 1
-	again
-
-;
-
-
-: shoot
-	if shotTimer != 0 then ;
-	shotTimer := shotCooldown
-	counter := 0
-	loop while counter < maxShots
-		i := shots
-		i += counter
-		i += counter
-		load v1
-		if v1 == 0 begin
-			i := shots
-			i += counter
-			i += counter
-			v0 := shipX
-			v0 += 2
-			v1 := shipY
-			v1 += -2
-			save v1
-			;
-		end
-		counter += 1
-	again	
-;
-
-: updateShots
-	counter := 0
-	v3 := -2
-	loop while counter < maxShots
-		i := shots
-		i += counter
-		i += counter	
-		load v1
-		if v1 != 0 begin
-			v1 += -2
-			i := shots
-			i += counter
-			i += counter	
-			save v1
-			i := imageShot
-			sprite v0 v1 3
-		end
-		counter += 1
-	again
-	
-
-;
-
-: updateAliens
-	counter := 0
-	loop while counter < maxAliens
-		i := aliens
-		i += counter
-		i += counter	
-		load v1
-		if v1 != 0 begin
-			
-			v2 := random 0b000000010
-			v2 += -1
-			v0 += v2
-			v1 += enemySpeed
-			if v1 >= 60 then v1 := 0
-
-
-			if v1 != 0 begin
-				i := imageAlien
-				sprite v0 v1 5
-				if vf == 1 begin
-					v1 := 0
-					i := score
-					load v0
-					v0 += 1
-					i := score
-					save v0
-				end 
-			end
-
-			i := aliens
-			i += counter
-			i += counter	
-			save v1
-
-		end
-		counter += 1
-	again
-;
-
-: updateScore
-	v0 := 0
-	v1 := 0
-	i := imageFull
-	loop while v0 < 128
-		sprite v0 v1 4
-		v0 += 8
-	again
-
-	
-	i := imageKills
-	v5 := 50
-	v6 := 0
-	sprite v5 v6 4
-	v2 := 4
-	i += v2
-	v5 += 8
-	sprite v5 v6 4
-
-	v5 += 5
-
-	
-	i := score
-	load v0
-	i := decodedScore
-	bcd v0
-	counter := 0
-	
-	loop while counter < 3
-		i := decodedScore
-		i += counter
-		load v0
-
-		i := image0
-		i += v0
-		i += v0
-		i += v0
-		i += v0
-
-		sprite v5 v6 4
-		v5 += 4
-		v2 := 1
-
-		
-		counter += 1
-	again
-
-
-
-
-
-
-;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-: setupa1iens
-	counter2 := 60
-	setupAliens
-;
-
-: testGlitchTable
-	jump gTest
-	jump gTest
-	jump gTest
-	jump gTest
-	jump gTest
-	jump gTest
-	jump gTest
-	jump gTest
 
 : glitchTable
 		jump g0 
 		jump g1
 		jump g2 
+		jump g0 
+		jump g1
+		jump g2 
+		jump g0 
+		jump g1
 		jump g3		
 
-: game1oop
+: gameloop 
 	gameloop
-	counter2 += -1
-	if counter2 > 0 then ;
+	counter2 += 1
+	if counter2 < 100 then ;
 
 	i := main
 	v0 := random 0b11111111
@@ -402,51 +343,33 @@
 
 	counter2 := 30
 
-	i := imageShip
+	v0 := random 0b111111
+	counter2 += v0
+
+	i := controls
 	v0 := random 0b11111111
 	v0 <<= v0
 	v0 <<= v0
 	i += v0
 	v0 := random 0b11111110
+	v0 += 1
 	i += v0
 	v0 := 0xf2 
 	v1 := 0x1e
 	save v1
 
-	v0 := random 0b0000011
+	i := imageShip
+	v0 := random 0b00111111
+	i += v0
+	v0 := random 0b11111111
+	save v0
+
+	v0 := random 0b0000111
 	
 	v0 <<= v0
-
-	counter2 += v0
-	counter2 += v0
-
 	# general glitch
-	
-
 	jump0 glitchTable
-	
-	
 ; 
-
-: gTest
-	i := imageShip
-	v0 := random 0b11111111
-	v0 <<= v0
-	v0 <<= v0
-	i += v0
-	v0 := random 0b11111110
-	i += v0
-	v0 := 0xf2 
-	v1 := 0x1e
-	save v1
-
-	
-	
-;
-
-
-
-
 
 : g0
 	# glitch screen texture
@@ -470,17 +393,24 @@
 ;
 
 : g2
-	# speed up enemies, need to glitch
-	enemySpeed += 2
-
-;
-
-: g3
 	#glitchShip
 	i := imageShip
 	v0 := random 0b11111111
-	v1 := random 0b11111111
-	v2 := random 0b10
+	v2 := random 0b11
 	i += v2
+	save v0
+;
+
+: g3
+	# speed up enemies, need to glitch
+	#enemySpeed += 2
+
+	i := updateAliens
+	v0 := 22
+	i += v0
+
+	v0 := 0x71
+	v1 := 0x03
 	save v1
+
 ;
