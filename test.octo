@@ -8,6 +8,9 @@
 :alias shipX vc
 :alias shipY vd
 :alias enemySpeed v8
+
+# images
+
 : imageShip
 0b00111000
 0b00111000
@@ -27,11 +30,80 @@
 0b11100000
 0b00000000
 
+: image0
+0b111
+0b101
+0b101
+0b111
+
+0b010
+0b010
+0b010
+0b010
+
+0b111
+0b001
+0b100
+0b111
+
+0b111
+0b001
+0b111
+0b111
+
+0b100
+0b100
+0b111
+0b001
+
+0b111
+0b100
+0b001
+0b111
+
+0b111
+0b100
+0b101
+0b111
+
+0b111
+0b001
+0b001
+0b001
+
+0b111
+0b101
+0b111
+0b111
+
+0b111
+0b111
+0b001
+0b001
+
+: imageKills
+0b10101010
+0b11001010
+0b10101010
+0b10101011
+0b01001110
+0b01001000
+0b01000010
+0b01101110
+
+: imageFull
+0xff
+0xff
+0xff
+0xff
+
+
+# data
+
 : controls
 7 9 5
 
 : aliens
-
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  
 
 : shots
@@ -203,6 +275,11 @@
 				sprite v0 v1 5
 				if vf == 1 begin
 					v1 := 0
+					i := score
+					load v0
+					v0 += 1
+					i := score
+					save v0
 				end 
 			end
 
@@ -217,12 +294,55 @@
 ;
 
 : updateScore
+	v0 := 0
+	v1 := 0
+	i := imageFull
+	loop while v0 < 128
+		sprite v0 v1 4
+		v0 += 8
+	again
+
+	
+	i := imageKills
+	v5 := 50
+	v6 := 0
+	sprite v5 v6 4
+	v2 := 4
+	i += v2
+	v5 += 8
+	sprite v5 v6 4
+
+	v5 += 5
+
+	
 	i := score
 	load v0
 	i := decodedScore
 	bcd v0
-	i := decodedScore
-	load v2
+	counter := 0
+	
+	loop while counter < 3
+		i := decodedScore
+		i += counter
+		load v0
+
+		i := image0
+		i += v0
+		i += v0
+		i += v0
+		i += v0
+
+		sprite v5 v6 4
+		v5 += 4
+		v2 := 1
+
+		
+		counter += 1
+	again
+
+
+
+
 
 
 ;
@@ -263,12 +383,7 @@
 		jump g0 
 		jump g1
 		jump g2 
-		jump g3
-		jump g4
-		jump g1
-		jump g0 
-		jump g1 
-		
+		jump g3		
 
 : game1oop
 	gameloop
@@ -298,10 +413,12 @@
 	v1 := 0x1e
 	save v1
 
-	v0 := random 0b00000111
-	counter2 += v0
-	counter2 += v0
+	v0 := random 0b0000011
+	
 	v0 <<= v0
+
+	counter2 += v0
+	counter2 += v0
 
 	# general glitch
 	
@@ -329,7 +446,6 @@
 
 
 
-: g- ;
 
 
 : g0
@@ -360,15 +476,6 @@
 ;
 
 : g3
-	#smaller bullets
-	i := imageShot
-	v0 := 0
-	v1 := 0
-	v2 := 0b01000000
-	save v2
-;
-
-: g4
 	#glitchShip
 	i := imageShip
 	v0 := random 0b11111111
